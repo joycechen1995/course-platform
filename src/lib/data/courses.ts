@@ -58,21 +58,63 @@ export async function getChapterById(chapterId: number): Promise<Chapter | null>
   );
 }
 
+/**
+ * A student counts as enrolled only while their access hasn't expired.
+ * `expires_at IS NULL` is kept as an escape hatch for any future case where
+ * an enrollment should never expire, even though every enrollment created
+ * today (checkout or manual admin activation) sets a 1-year expiry.
+ */
 export async function isUserEnrolled(userId: number, courseId: number): Promise<boolean> {
   const row = await one<{ id: number }>(
-    "SELECT id FROM enrollments WHERE user_id = $1 AND course_id = $2",
+    `SELECT id FROM enrollments
+     WHERE user_id = $1 AND course_id = $2
+       AND (expires_at IS NULL OR expires_at > NOW())`,
     [userId, courseId]
   );
   return !!row;
 }
 
-export async function getUserEnrolledCourses(userId: number): Promise<Course[]> {
-  return many<Course>(
-    `SELECT c.* FROM courses c
+/** The active (non-expired) enrollment row, if any, for showing expiry on the learn page. */
+export async function getActiveEnrollment(
+  userId: number,
+  courseId: number
+): Promise<{ expires_at: string | null } | null> {
+  const row = await one<{ expires_at: string | null }>(
+    `SELECT expires_at FROM enrollments
+     WHERE user_id = $1 AND course_id = $2
+       AND (expires_at IS NULL OR expires_at > NOW())`,
+    [userId, courseId]
+  );
+  return row ?? null;
+}
+
+export async function getUserEnrolledCourses(
+  userId: number
+): Promise<(Course & { enrolled_at: string; expires_at: string | null })[]> {
+  return many<Course & { enrolled_at: string; expires_at: string | null }>(
+    `SELECT c.*, e.enrolled_at, e.expires_at FROM courses c
      JOIN enrollments e ON e.course_id = c.id
      WHERE e.user_id = $1
      ORDER BY e.enrolled_at DESC`,
     [userId]
+  );
+}
+
+/** Enrolled students for a course (admin view), with their access expiry. */
+export async function getCourseEnrollmentStudents(courseId: number) {
+  return many<{
+    user_id: number;
+    name: string;
+    email: string;
+    enrolled_at: string;
+    expires_at: string | null;
+  }>(
+    `SELECT u.id as user_id, u.name, u.email, e.enrolled_at, e.expires_at
+     FROM enrollments e
+     JOIN users u ON u.id = e.user_id
+     WHERE e.course_id = $1
+     ORDER BY e.enrolled_at DESC`,
+    [courseId]
   );
 }
 

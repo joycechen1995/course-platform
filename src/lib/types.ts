@@ -44,6 +44,7 @@ export type Enrollment = {
   user_id: number;
   course_id: number;
   enrolled_at: string;
+  expires_at: string | null;
 };
 
 export type Coupon = {

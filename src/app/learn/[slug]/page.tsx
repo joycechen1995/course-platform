@@ -5,9 +5,10 @@ import {
   getCourseBySlug,
   getCourseChapters,
   getLessonProgressSet,
-  isUserEnrolled,
+  getActiveEnrollment,
 } from "@/lib/data/courses";
 import { toggleLessonCompleteAction } from "@/lib/actions/learning";
+import { formatDateOnly } from "@/lib/format";
 
 /**
  * Admin can paste either a direct video file URL (mp4 etc.) or a YouTube link
@@ -59,8 +60,9 @@ export default async function LearnPage({
   const course = await getCourseBySlug(slug);
   if (!course) notFound();
 
-  if (!(await isUserEnrolled(user.id, course.id))) {
-    redirect(`/courses/${slug}`);
+  const enrollment = await getActiveEnrollment(user.id, course.id);
+  if (!enrollment) {
+    redirect(`/courses/${slug}?expired=1`);
   }
 
   const chapters = await getCourseChapters(course.id);
@@ -106,6 +108,11 @@ export default async function LearnPage({
               style={{ width: `${progressPercent}%` }}
             />
           </div>
+          {enrollment.expires_at && (
+            <p className="mt-2 text-xs text-slate-400">
+              觀看效期至 {formatDateOnly(enrollment.expires_at)}
+            </p>
+          )}
         </div>
         <div className="space-y-3">
           {chapters.map((chapter) => (

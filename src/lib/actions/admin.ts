@@ -216,25 +216,24 @@ export async function manualEnrollAction(formData: FormData) {
   const course = await getCourseById(courseId);
   if (!course) redirect(`/admin/courses/${courseId}`);
 
-  const already = await one<{ id: number }>(
-    "SELECT id FROM enrollments WHERE user_id = $1 AND course_id = $2",
+  // Grants (or renews) 1 year of access from right now. Using this button
+  // again for an already-enrolled student — e.g. after their access
+  // expired and they paid to continue — simply pushes the expiry another
+  // year out, and logs a fresh paid order each time it's used, mirroring
+  // Joyce's real workflow of "payment received outside the site → click
+  // this to open/extend access".
+  await run(
+    `INSERT INTO enrollments (user_id, course_id, expires_at)
+     VALUES ($1, $2, NOW() + INTERVAL '1 year')
+     ON CONFLICT (user_id, course_id)
+     DO UPDATE SET expires_at = NOW() + INTERVAL '1 year'`,
     [student!.id, courseId]
   );
-
-  if (!already) {
-    await run("INSERT INTO enrollments (user_id, course_id) VALUES ($1, $2)", [
-      student!.id,
-      courseId,
-    ]);
-    // Record it as a paid order too, so revenue/order history stays accurate
-    // even though the payment itself happened outside the platform (e.g. a
-    // manually-sent payment link, bank transfer, etc.).
-    await run(
-      `INSERT INTO orders (user_id, course_id, amount, coupon_code, status)
-       VALUES ($1, $2, $3, NULL, 'paid')`,
-      [student!.id, courseId, course!.price]
-    );
-  }
+  await run(
+    `INSERT INTO orders (user_id, course_id, amount, coupon_code, status)
+     VALUES ($1, $2, $3, NULL, 'paid')`,
+    [student!.id, courseId, course!.price]
+  );
 
   revalidatePath(`/admin/courses/${courseId}`);
   revalidatePath("/admin/orders");

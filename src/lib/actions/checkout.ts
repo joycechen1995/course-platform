@@ -69,8 +69,15 @@ export async function payOrderAction(formData: FormData) {
 
   if (order.status === "pending") {
     await run("UPDATE orders SET status = 'paid' WHERE id = $1", [orderId]);
+    // Grants 1 year of access from the moment of payment. If the student is
+    // re-purchasing after a previous enrollment expired, this renews it
+    // (resets expiry to 1 year from now) rather than leaving the old,
+    // already-expired date in place.
     await run(
-      "INSERT INTO enrollments (user_id, course_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+      `INSERT INTO enrollments (user_id, course_id, expires_at)
+       VALUES ($1, $2, NOW() + INTERVAL '1 year')
+       ON CONFLICT (user_id, course_id)
+       DO UPDATE SET expires_at = NOW() + INTERVAL '1 year'`,
       [user.id, order.course_id]
     );
   }

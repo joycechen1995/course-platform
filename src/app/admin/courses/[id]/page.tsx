@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { getCourseById, getCourseChapters } from "@/lib/data/courses";
+import {
+  getCourseById,
+  getCourseChapters,
+  getCourseEnrollmentStudents,
+} from "@/lib/data/courses";
 import {
   updateCourseAction,
   togglePublishAction,
@@ -10,6 +14,7 @@ import {
   manualEnrollAction,
 } from "@/lib/actions/admin";
 import CourseForm from "@/components/CourseForm";
+import { formatDateOnly, isPast } from "@/lib/format";
 
 export default async function EditCoursePage({
   params,
@@ -24,6 +29,7 @@ export default async function EditCoursePage({
   if (!course) notFound();
 
   const chapters = await getCourseChapters(course.id);
+  const enrolledStudents = await getCourseEnrollmentStudents(course.id);
 
   return (
     <div className="max-w-3xl space-y-10">
@@ -165,6 +171,72 @@ export default async function EditCoursePage({
             </button>
           </form>
         </div>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">已開通學生</h2>
+        <p className="mb-3 text-sm text-slate-500">
+          每位學生開通後可觀看課程 1 年，效期到了會自動失去觀看權限；到期後只要再收一次款，按「續約
+          1 年」就能重新開通。
+        </p>
+        {enrolledStudents.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-400">
+            還沒有學生開通這堂課
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-slate-500">
+                <tr>
+                  <th className="px-4 py-2">學生</th>
+                  <th className="px-4 py-2">開通日期</th>
+                  <th className="px-4 py-2">效期至</th>
+                  <th className="px-4 py-2">狀態</th>
+                  <th className="px-4 py-2"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {enrolledStudents.map((s) => {
+                  const expired = isPast(s.expires_at);
+                  return (
+                    <tr key={s.user_id}>
+                      <td className="px-4 py-2">
+                        {s.name}
+                        <div className="text-xs text-slate-400">{s.email}</div>
+                      </td>
+                      <td className="px-4 py-2 text-slate-500">
+                        {formatDateOnly(s.enrolled_at)}
+                      </td>
+                      <td className="px-4 py-2 text-slate-500">
+                        {formatDateOnly(s.expires_at)}
+                      </td>
+                      <td className="px-4 py-2">
+                        <span
+                          className={`rounded px-2 py-0.5 text-xs ${
+                            expired
+                              ? "bg-rose-100 text-rose-700"
+                              : "bg-emerald-100 text-emerald-700"
+                          }`}
+                        >
+                          {expired ? "已到期" : "有效"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <form action={manualEnrollAction}>
+                          <input type="hidden" name="courseId" value={course.id} />
+                          <input type="hidden" name="email" value={s.email} />
+                          <button className="text-xs text-indigo-600 hover:underline">
+                            續約 1 年
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div>

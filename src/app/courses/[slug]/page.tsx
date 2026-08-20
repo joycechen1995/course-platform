@@ -6,10 +6,13 @@ import PurchaseForm from "@/components/PurchaseForm";
 
 export default async function CourseDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ expired?: string }>;
 }) {
   const { slug } = await params;
+  const { expired } = await searchParams;
   const course = await getCourseBySlug(slug);
   if (!course || !course.is_published) notFound();
 
@@ -20,6 +23,11 @@ export default async function CourseDetailPage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
+      {expired && (
+        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          你對這堂課的觀看效期已經到期了，請聯繫講師續約後即可繼續觀看。
+        </div>
+      )}
       <div className="grid gap-10 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <p className="text-sm font-medium text-indigo-600">{course.subtitle}</p>

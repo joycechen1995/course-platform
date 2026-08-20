@@ -129,8 +129,15 @@ CREATE TABLE IF NOT EXISTS enrollments (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   enrolled_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ,
   UNIQUE(user_id, course_id)
 );
+
+-- Migration for databases created before the "1 year access" feature:
+-- adds the column if it's missing, and backfills any pre-existing
+-- enrollment (which had no expiry) to expire 1 year after it was granted.
+ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+UPDATE enrollments SET expires_at = enrolled_at + INTERVAL '1 year' WHERE expires_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS lesson_progress (
   id SERIAL PRIMARY KEY,
