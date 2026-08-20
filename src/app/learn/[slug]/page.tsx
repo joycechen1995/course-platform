@@ -9,6 +9,40 @@ import {
 } from "@/lib/data/courses";
 import { toggleLessonCompleteAction } from "@/lib/actions/learning";
 
+/**
+ * Admin can paste either a direct video file URL (mp4 etc.) or a YouTube link
+ * (watch/youtu.be/embed/shorts). This normalizes YouTube links into an
+ * embeddable URL; returns null for anything that isn't recognized as YouTube,
+ * so the caller falls back to a plain <video> tag.
+ */
+function getYouTubeEmbedUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, "");
+    let videoId: string | null = null;
+
+    if (host === "youtu.be") {
+      videoId = u.pathname.slice(1);
+    } else if (host === "youtube.com" || host === "m.youtube.com") {
+      if (u.pathname === "/watch") {
+        videoId = u.searchParams.get("v");
+      } else if (u.pathname.startsWith("/embed/")) {
+        videoId = u.pathname.split("/embed/")[1];
+      } else if (u.pathname.startsWith("/shorts/")) {
+        videoId = u.pathname.split("/shorts/")[1];
+      }
+    } else {
+      return null;
+    }
+
+    videoId = videoId?.split(/[?&]/)[0] ?? null;
+    if (!videoId) return null;
+    return `https://www.youtube-nocookie.com/embed/${videoId}`;
+  } catch {
+    return null;
+  }
+}
+
 export default async function LearnPage({
   params,
   searchParams,
@@ -48,6 +82,7 @@ export default async function LearnPage({
     (completedCount / allLessons.length) * 100
   );
   const isCompleted = progressSet.has(currentLesson.id);
+  const youtubeEmbedUrl = getYouTubeEmbedUrl(currentLesson.video_url);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 lg:flex-row">
@@ -117,12 +152,22 @@ export default async function LearnPage({
 
       <div className="flex-1">
         <div className="overflow-hidden rounded-lg bg-black">
-          <video
-            key={currentLesson.id}
-            src={currentLesson.video_url}
-            controls
-            className="aspect-video w-full"
-          />
+          {youtubeEmbedUrl ? (
+            <iframe
+              key={currentLesson.id}
+              src={youtubeEmbedUrl}
+              className="aspect-video w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <video
+              key={currentLesson.id}
+              src={currentLesson.video_url}
+              controls
+              className="aspect-video w-full"
+            />
+          )}
         </div>
         <div className="mt-4 flex items-center justify-between">
           <h1 className="text-xl font-bold">{currentLesson.title}</h1>

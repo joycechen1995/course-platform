@@ -188,6 +188,69 @@ export async function deleteLessonAction(formData: FormData) {
   revalidatePath(`/admin/courses/${courseId}`);
 }
 
+export async function manualEnrollAction(formData: FormData) {
+  await requireAdmin();
+  const courseId = Number(formData.get("courseId"));
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!email) {
+    redirect(
+      `/admin/courses/${courseId}?enroll_error=${encodeURIComponent("請輸入學生的 email")}`
+    );
+  }
+
+  const student = await one<{ id: number }>(
+    "SELECT id FROM users WHERE email = $1",
+    [email]
+  );
+  if (!student) {
+    redirect(
+      `/admin/courses/${courseId}?enroll_error=${encodeURIComponent(
+        "找不到這個 email 的帳號，請確認學生已經先在網站上註冊過"
+      )}`
+    );
+  }
+
+  const course = await getCourseById(courseId);
+  if (!course) redirect(`/admin/courses/${courseId}`);
+
+  const already = await one<{ id: number }>(
+    "SELECT id FROM enrollments WHERE user_id = $1 AND course_id = $2",
+    [student!.id, courseId]
+  );
+
+  if (!already) {
+    await run("INSERT INTO enrollments (user_id, course_id) VALUES ($1, $2)", [
+      student!.id,
+      courseId,
+    ]);
+    // Record it as a paid order too, so revenue/order history stays accurate
+    // even though the payment itself happened outside the platform (e.g. a
+    // manually-sent payment link, bank transfer, etc.).
+    await run(
+      `INSERT INTO orders (user_id, course_id, amount, coupon_code, status)
+       VALUES ($1, $2, $3, NULL, 'paid')`,
+      [student!.id, courseId, course!.price]
+    );
+  }
+
+  revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/students");
+  revalidatePath("/admin");
+  redirect(`/admin/courses/${courseId}?enrolled=1`);
+}
+
+export async function deleteOrderAction(formData: FormData) {
+  await requireAdmin();
+  const orderId = Number(formData.get("orderId"));
+  await run("DELETE FROM orders WHERE id = $1", [orderId]);
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+}
+
 const couponSchema = z.object({
   code: z.string().min(3, "代碼至少 3 個字元"),
   discount_percent: z.coerce.number().int().min(1).max(100),

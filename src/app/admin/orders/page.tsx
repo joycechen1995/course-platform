@@ -1,4 +1,5 @@
 import { adminListOrders } from "@/lib/data/courses";
+import { deleteOrderAction } from "@/lib/actions/admin";
 
 const statusLabel: Record<string, string> = {
   paid: "已付款",
@@ -22,12 +23,13 @@ export default async function AdminOrdersPage() {
               <th className="px-4 py-3">金額</th>
               <th className="px-4 py-3">狀態</th>
               <th className="px-4 py-3">時間</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {orders.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
                   還沒有任何訂單
                 </td>
               </tr>
@@ -53,6 +55,14 @@ export default async function AdminOrdersPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-slate-500">{order.created_at}</td>
+                <td className="px-4 py-3 text-right">
+                  <form action={deleteOrderAction}>
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <button className="text-xs text-rose-600 hover:underline">
+                      刪除
+                    </button>
+                  </form>
+                </td>
               </tr>
             ))}
           </tbody>

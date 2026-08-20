@@ -7,15 +7,19 @@ import {
   deleteChapterAction,
   createLessonAction,
   deleteLessonAction,
+  manualEnrollAction,
 } from "@/lib/actions/admin";
 import CourseForm from "@/components/CourseForm";
 
 export default async function EditCoursePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ enroll_error?: string; enrolled?: string }>;
 }) {
   const { id } = await params;
+  const { enroll_error, enrolled } = await searchParams;
   const course = await getCourseById(Number(id));
   if (!course) notFound();
 
@@ -107,11 +111,11 @@ export default async function EditCoursePage({
                 </div>
                 <div className="flex-1 min-w-[160px]">
                   <label className="mb-1 block text-xs text-slate-500">
-                    影片網址
+                    影片網址（支援 YouTube 連結，建議設為「不公開」）
                   </label>
                   <input
                     name="video_url"
-                    placeholder="https://..."
+                    placeholder="貼上 YouTube 連結或影片檔案網址"
                     className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                   />
                 </div>
@@ -161,6 +165,49 @@ export default async function EditCoursePage({
             </button>
           </form>
         </div>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">手動開通學生</h2>
+        <p className="mb-3 text-sm text-slate-500">
+          如果你是私下（例如自己傳付款連結、匯款、LINE Pay
+          等）跟學生收款，不透過網站結帳，可以在這裡直接用學生的
+          email 開通這堂課的觀看權限。學生要先自己在網站上「免費註冊」過帳號，這裡才找得到人。
+        </p>
+        {enroll_error && (
+          <div className="mb-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            {enroll_error}
+          </div>
+        )}
+        {enrolled && (
+          <div className="mb-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            已成功開通，這位學生現在可以登入觀看課程了。
+          </div>
+        )}
+        <form
+          action={manualEnrollAction}
+          className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 bg-white p-4"
+        >
+          <input type="hidden" name="courseId" value={course.id} />
+          <div className="flex-1 min-w-[220px]">
+            <label className="mb-1 block text-xs text-slate-500">
+              學生的 email（要先請學生在網站註冊過）
+            </label>
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="student@example.com"
+              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm text-white hover:bg-emerald-700"
+          >
+            開通課程
+          </button>
+        </form>
       </div>
     </div>
   );
