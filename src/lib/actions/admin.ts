@@ -35,6 +35,8 @@ const courseSchema = z.object({
   price: z.coerce.number().int().min(0, "價格不可為負數"),
   instructor_name: z.string().optional().default(""),
   instructor_bio: z.string().optional().default(""),
+  instructor_photo: z.string().optional().default(""),
+  highlights: z.string().optional().default(""),
 });
 
 export async function createCourseAction(
@@ -50,6 +52,8 @@ export async function createCourseAction(
     price: formData.get("price"),
     instructor_name: formData.get("instructor_name"),
     instructor_bio: formData.get("instructor_bio"),
+    instructor_photo: formData.get("instructor_photo"),
+    highlights: formData.get("highlights"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "輸入資料有誤" };
@@ -59,8 +63,8 @@ export async function createCourseAction(
 
   const info = await one<{ id: number }>(
     `INSERT INTO courses
-      (slug, title, subtitle, description, cover_image, price, instructor_name, instructor_bio, is_published)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0)
+      (slug, title, subtitle, description, cover_image, price, instructor_name, instructor_bio, instructor_photo, highlights, is_published)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 0)
      RETURNING id`,
     [
       slug,
@@ -71,6 +75,8 @@ export async function createCourseAction(
       data.price,
       data.instructor_name,
       data.instructor_bio,
+      data.instructor_photo,
+      data.highlights,
     ]
   );
 
@@ -91,6 +97,8 @@ export async function updateCourseAction(
     price: formData.get("price"),
     instructor_name: formData.get("instructor_name"),
     instructor_bio: formData.get("instructor_bio"),
+    instructor_photo: formData.get("instructor_photo"),
+    highlights: formData.get("highlights"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "輸入資料有誤" };
@@ -98,8 +106,8 @@ export async function updateCourseAction(
   const data = parsed.data;
 
   await run(
-    `UPDATE courses SET title=$1, subtitle=$2, description=$3, cover_image=$4, price=$5, instructor_name=$6, instructor_bio=$7
-     WHERE id = $8`,
+    `UPDATE courses SET title=$1, subtitle=$2, description=$3, cover_image=$4, price=$5, instructor_name=$6, instructor_bio=$7, instructor_photo=$8, highlights=$9
+     WHERE id = $10`,
     [
       data.title,
       data.subtitle,
@@ -108,6 +116,8 @@ export async function updateCourseAction(
       data.price,
       data.instructor_name,
       data.instructor_bio,
+      data.instructor_photo,
+      data.highlights,
       courseId,
     ]
   );

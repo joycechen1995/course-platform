@@ -13,7 +13,7 @@ export default async function HomePage() {
         />
         <div className="relative mx-auto max-w-3xl px-4 text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-            🎓 個人講師 · 線上課程平台
+            🎓 心禾學苑 · 線上課程平台
           </span>
           <h1 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
             用自己的步調，
@@ -22,7 +22,7 @@ export default async function HomePage() {
             </span>
           </h1>
           <p className="mt-5 text-lg text-slate-600">
-            這是一個示範用的線上課程平台：瀏覽課程、註冊會員、完成購買、觀看影片、追蹤學習進度，一氣呵成。
+            歡迎來到心禾學苑：瀏覽課程、註冊會員、完成購買、觀看影片、追蹤學習進度，一氣呵成。
           </p>
           <div className="mt-8 flex justify-center gap-4">
             <Link

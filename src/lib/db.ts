@@ -93,9 +93,16 @@ CREATE TABLE IF NOT EXISTS courses (
   price INTEGER NOT NULL DEFAULT 0,
   instructor_name TEXT NOT NULL DEFAULT '',
   instructor_bio TEXT NOT NULL DEFAULT '',
+  instructor_photo TEXT NOT NULL DEFAULT '',
+  highlights TEXT NOT NULL DEFAULT '',
   is_published INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Migration for databases created before instructor photos / "what you'll
+-- learn" highlights existed on the course sales page.
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS instructor_photo TEXT NOT NULL DEFAULT '';
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS highlights TEXT NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS chapters (
   id SERIAL PRIMARY KEY,
@@ -187,14 +194,15 @@ async function seed() {
     coverImage: string,
     price: number,
     instructorName: string,
-    instructorBio: string
+    instructorBio: string,
+    highlights: string = ""
   ) => {
     const row = await one<{ id: number }>(
       `INSERT INTO courses
-        (slug, title, subtitle, description, cover_image, price, instructor_name, instructor_bio, is_published)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 1)
+        (slug, title, subtitle, description, cover_image, price, instructor_name, instructor_bio, highlights, is_published)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 1)
        RETURNING id`,
-      [slug, title, subtitle, description, coverImage, price, instructorName, instructorBio]
+      [slug, title, subtitle, description, coverImage, price, instructorName, instructorBio, highlights]
     );
     return row!.id;
   };
@@ -207,7 +215,8 @@ async function seed() {
     "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800",
     2400,
     "課程講師",
-    "全端工程師，曾任職於多家新創公司，專注於教育科技產品開發。"
+    "全端工程師，曾任職於多家新創公司，專注於教育科技產品開發。",
+    "從零打造一個可以上線的全端網站\n設定會員註冊、登入與權限控管\n串接金流，完成完整購買流程\n建立可管理課程內容的後台"
   );
 
   const course2Id = await insertCourse(
@@ -218,7 +227,8 @@ async function seed() {
     "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800",
     1800,
     "課程講師",
-    "自媒體經營者與影像剪輯師，累積超過百支商業影片製作經驗。"
+    "自媒體經營者與影像剪輯師，累積超過百支商業影片製作經驗。",
+    "用手機就能剪出質感影片\n掌握剪接節奏與轉場技巧\n學會加上吸引人的字幕\n建立作品集並接到第一個案子"
   );
 
   const courseIds = [course1Id, course2Id];

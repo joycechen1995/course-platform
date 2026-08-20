@@ -8,10 +8,10 @@ export default function Header({ user }: { user: SessionUser | null }) {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
         <Link href="/" className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-violet-500 text-sm font-bold text-white shadow-sm">
-            課
+            禾
           </span>
           <span className="text-lg font-bold tracking-tight text-slate-900">
-            我的線上課程平台
+            心禾學苑
           </span>
         </Link>
         <nav className="flex items-center gap-1 text-sm font-medium">

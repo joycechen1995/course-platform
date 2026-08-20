@@ -8,6 +8,8 @@ export type Course = {
   price: number;
   instructor_name: string;
   instructor_bio: string;
+  instructor_photo: string;
+  highlights: string;
   is_published: number;
   created_at: string;
 };
