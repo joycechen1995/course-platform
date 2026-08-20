@@ -14,6 +14,7 @@ import {
   manualEnrollAction,
 } from "@/lib/actions/admin";
 import CourseForm from "@/components/CourseForm";
+import FormButton from "@/components/FormButton";
 import { formatDateOnly, isPast } from "@/lib/format";
 
 export default async function EditCoursePage({
@@ -38,7 +39,7 @@ export default async function EditCoursePage({
           <h1 className="text-2xl font-bold">編輯課程</h1>
           <form action={togglePublishAction}>
             <input type="hidden" name="courseId" value={course.id} />
-            <button
+            <FormButton
               className={`rounded-md px-4 py-2 text-sm font-medium ${
                 course.is_published
                   ? "border border-slate-300 text-slate-600 hover:bg-slate-100"
@@ -46,7 +47,7 @@ export default async function EditCoursePage({
               }`}
             >
               {course.is_published ? "下架課程" : "上架課程"}
-            </button>
+            </FormButton>
           </form>
         </div>
         <div className="rounded-lg border border-slate-200 bg-white p-6">
@@ -72,9 +73,12 @@ export default async function EditCoursePage({
                 <form action={deleteChapterAction}>
                   <input type="hidden" name="chapterId" value={chapter.id} />
                   <input type="hidden" name="courseId" value={course.id} />
-                  <button className="text-xs text-red-600 hover:underline">
+                  <FormButton
+                    className="text-xs text-red-600 hover:underline"
+                    confirmText={`確定要刪除「${chapter.title}」這個章節嗎？裡面的所有單元也會一併刪除，此動作無法復原。`}
+                  >
                     刪除章節
-                  </button>
+                  </FormButton>
                 </form>
               </div>
               <ul className="divide-y divide-slate-100">
@@ -92,9 +96,12 @@ export default async function EditCoursePage({
                     <form action={deleteLessonAction}>
                       <input type="hidden" name="lessonId" value={lesson.id} />
                       <input type="hidden" name="courseId" value={course.id} />
-                      <button className="text-xs text-red-600 hover:underline">
+                      <FormButton
+                        className="text-xs text-red-600 hover:underline"
+                        confirmText={`確定要刪除單元「${lesson.title}」嗎？此動作無法復原。`}
+                      >
                         刪除
-                      </button>
+                      </FormButton>
                     </form>
                   </li>
                 ))}
@@ -137,12 +144,9 @@ export default async function EditCoursePage({
                     className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                   />
                 </div>
-                <button
-                  type="submit"
-                  className="rounded-md bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-900"
-                >
+                <FormButton className="rounded-md bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-900">
                   新增單元
-                </button>
+                </FormButton>
               </form>
             </div>
           ))}
@@ -163,12 +167,9 @@ export default async function EditCoursePage({
                 className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
               />
             </div>
-            <button
-              type="submit"
-              className="rounded-md bg-indigo-600 px-4 py-1.5 text-sm text-white hover:bg-indigo-700"
-            >
+            <FormButton className="rounded-md bg-indigo-600 px-4 py-1.5 text-sm text-white hover:bg-indigo-700">
               新增章節
-            </button>
+            </FormButton>
           </form>
         </div>
       </div>
@@ -225,9 +226,9 @@ export default async function EditCoursePage({
                         <form action={manualEnrollAction}>
                           <input type="hidden" name="courseId" value={course.id} />
                           <input type="hidden" name="email" value={s.email} />
-                          <button className="text-xs text-indigo-600 hover:underline">
+                          <FormButton className="text-xs text-indigo-600 hover:underline">
                             續約 1 年
-                          </button>
+                          </FormButton>
                         </form>
                       </td>
                     </tr>
@@ -273,12 +274,9 @@ export default async function EditCoursePage({
               className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
             />
           </div>
-          <button
-            type="submit"
-            className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm text-white hover:bg-emerald-700"
-          >
+          <FormButton className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm text-white hover:bg-emerald-700">
             開通課程
-          </button>
+          </FormButton>
         </form>
       </div>
     </div>

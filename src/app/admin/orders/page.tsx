@@ -1,5 +1,6 @@
 import { adminListOrders } from "@/lib/data/courses";
 import { deleteOrderAction } from "@/lib/actions/admin";
+import FormButton from "@/components/FormButton";
 
 const statusLabel: Record<string, string> = {
   paid: "已付款",
@@ -58,9 +59,12 @@ export default async function AdminOrdersPage() {
                 <td className="px-4 py-3 text-right">
                   <form action={deleteOrderAction}>
                     <input type="hidden" name="orderId" value={order.id} />
-                    <button className="text-xs text-rose-600 hover:underline">
+                    <FormButton
+                      className="text-xs text-rose-600 hover:underline"
+                      confirmText={`確定要刪除訂單 #${order.id} 嗎？此動作無法復原（不會影響學生已經開通的課程權限）。`}
+                    >
                       刪除
-                    </button>
+                    </FormButton>
                   </form>
                 </td>
               </tr>
